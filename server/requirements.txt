@@ -1,0 +1,9 @@
+fastapi[standard]
+sqlmodel
+python-dotenv
+passlib[bcrypt]
+PyJWT
+psycopg2-binary
+boto3
+qrcode
+user-agents

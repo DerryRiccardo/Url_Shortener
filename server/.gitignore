@@ -1,0 +1,21 @@
+# Environments
+.env
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Project Documents
+PRD_BACKEND.md
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.vscode
