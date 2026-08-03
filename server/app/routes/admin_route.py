@@ -5,6 +5,7 @@ from app.models import User, AdminSummaryResponse, UserPublic, UrlPublic, QrCode
 from app.services import admin_service
 from app.utils.response import SuccessResponse, ErrorResponse
 from app.utils.jwt import get_current_user, require_admin
+from app.utils.logger import app_logger
 import uuid
 from typing import Any
 
@@ -31,6 +32,7 @@ def get_all_users(page: int = 1, limit: int = 10, session: Session = Depends(get
 
 @router.patch("/users/{user_id}/status", response_model=SuccessResponse[UserPublic], status_code=200, responses=ADMIN_RESPONSES)
 def update_user_status(user_id: uuid.UUID, is_active: bool = Query(...), session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
+    app_logger.warning(f"Admin {admin_user.id} updating user {user_id} status to {is_active}")
     user = admin_service.update_user_status(session, user_id, is_active)
     return SuccessResponse(message="User status updated", data=user)
 
@@ -41,6 +43,7 @@ def get_all_urls(page: int = 1, limit: int = 10, session: Session = Depends(get_
 
 @router.delete("/urls/{url_id}", status_code=204, responses=ADMIN_RESPONSES)
 def delete_url_by_admin(url_id: uuid.UUID, session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
+    app_logger.warning(f"Admin {admin_user.id} deleting URL {url_id}")
     admin_service.delete_url_as_admin(session, url_id)
     return None
 

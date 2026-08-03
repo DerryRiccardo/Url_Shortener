@@ -101,6 +101,10 @@ class QrCodeCreate(QrCodeShared):
     url_id: uuid.UUID | None = Field(default=None)
     long_url: str | None = Field(default=None, max_length=2048)
 
+class QrCodeUpdate(SQLModel):
+    title: str | None = Field(default=None, max_length=255)
+    qr_color: str | None = Field(default=None, max_length=7)
+
 class QrCodePublic(QrCodeShared):
     id: uuid.UUID
     target_url: str

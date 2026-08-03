@@ -7,7 +7,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # jembatan komunikasi ke database
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=False)
 
 # fungsi untuk membuat tabel otomatis (npx prisma db push)
 def create_db_and_tables():

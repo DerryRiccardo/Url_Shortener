@@ -3,7 +3,7 @@ import os
 import qrcode
 from io import BytesIO
 from sqlmodel import Session
-from app.models import QrCode, QrCodeCreate
+from app.models import QrCode, QrCodeCreate, QrCodeUpdate
 from app.repositories import qr_repository, url_repository
 from app.utils.storage import upload_image_to_r2
 from app.utils.response import AppException
@@ -102,3 +102,52 @@ def get_qr_by_id(session: Session, qr_id: uuid.UUID, user_id: uuid.UUID):
     if not qr or qr.owner_id != user_id or qr.deleted_at is not None:
         raise AppException(status_code=404, message="QR Code not found", code="QR_NOT_FOUND")
     return format_qr_public(qr)
+
+def delete_qr(session: Session, qr_id: uuid.UUID, user_id: uuid.UUID):
+    qr = qr_repository.get_qr_by_id(session, qr_id)
+    if not qr or qr.owner_id != user_id or qr.deleted_at is not None:
+        raise AppException(status_code=404, message="QR Code not found", code="QR_NOT_FOUND")
+        
+    qr.deleted_at = datetime.now()
+    qr.is_active = False
+    qr_repository.update_qr(session, qr)
+    return True
+
+def update_qr(session: Session, qr_id: uuid.UUID, update_data: QrCodeUpdate, user_id: uuid.UUID):
+    qr = qr_repository.get_qr_by_id(session, qr_id)
+    if not qr or qr.owner_id != user_id or qr.deleted_at is not None:
+        raise AppException(status_code=404, message="QR Code not found", code="QR_NOT_FOUND")
+        
+    # Update title
+    if update_data.title is not None:
+        qr.title = update_data.title
+        
+    # Jika warna diubah, kita HARUS membuat ulang gambarnya dari awal
+    if update_data.qr_color is not None and update_data.qr_color != qr.qr_color:
+        # 1. Regenerasi QR dengan warna baru
+        qr_img = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr_img.add_data(qr.target_url)
+        qr_img.make(fit=True)
+
+        img = qr_img.make_image(fill_color=update_data.qr_color, back_color="white")
+        
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr)
+        
+        # 2. Upload ulang ke Cloudflare dengan nama file baru agar cache terganti
+        new_filename = f"{uuid.uuid4()}.png"
+        public_image_url = upload_image_to_r2(img_byte_arr, new_filename)
+        
+        # 3. Update database
+        qr.qr_color = update_data.qr_color
+        qr.qr_image = public_image_url
+        
+    qr.updated_at = datetime.now()
+    updated_qr = qr_repository.update_qr(session, qr)
+    
+    return format_qr_public(updated_qr)

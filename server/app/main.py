@@ -5,17 +5,52 @@ from app.routes import auth_route, url_route, redirect_route, qr_route, admin_ro
 from fastapi.responses import JSONResponse
 from app.utils.response import AppException
 from fastapi.exceptions import RequestValidationError
+from app.utils.logger import app_logger, request_id_context_var
+import uuid
+import traceback
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Dijalankan sebelum server menerima request
+    app_logger.info("Starting up server and initializing database...")
     create_db_and_tables()
+    app_logger.info("Server is up and running!")
     yield 
+    app_logger.info("Shutting down server...")
 
 app = FastAPI(lifespan=lifespan)
 
+# Middleware untuk menambahkan Request ID ke setiap request
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    # Generate random Request ID and bind it to context var
+    req_id = uuid.uuid4().hex[:8]
+    request_id_context_var.set(req_id)
+    
+    app_logger.debug(f"Incoming request: {request.method} {request.url.path}")
+    response = await call_next(request) # Menjalankan endpoint request yang diminta user
+    app_logger.debug(f"Outgoing response: {response.status_code}")
+    
+    return response
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    app_logger.error(f"Unhandled Exception: {str(exc)}\n{traceback.format_exc()}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "message": "Internal Server Error",
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "details": None
+            }
+        }
+    )
+
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException):
+    app_logger.warning(f"AppException {exc.status_code}: {exc.message} (Code: {exc.code})")
     return JSONResponse(
         status_code=exc.status_code,
         content={
