@@ -48,7 +48,7 @@ def require_admin(current_user: User = Depends(get_current_user)):
     from app.models import Role
     if current_user.role != Role.admin:
         raise AppException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=403,
             message="You don't have permission to perform this action",
             code="INSUFFICIENT_PERMISSIONS"
         )

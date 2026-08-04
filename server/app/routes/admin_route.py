@@ -27,8 +27,8 @@ def get_summary(session: Session = Depends(get_session), admin_user: User = Depe
 
 @router.get("/users", response_model=SuccessResponse[Any], status_code=200, responses=ADMIN_RESPONSES)
 def get_all_users(page: int = 1, limit: int = 10, session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
-    data = admin_service.get_users(session, page, limit)
-    return SuccessResponse(message="Users retrieved", data=data)
+    result = admin_service.get_users(session, page, limit)
+    return SuccessResponse(message="Users retrieved", data=result["data"], meta=result["meta"])
 
 @router.patch("/users/{user_id}/status", response_model=SuccessResponse[UserPublic], status_code=200, responses=ADMIN_RESPONSES)
 def update_user_status(user_id: uuid.UUID, is_active: bool = Query(...), session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
@@ -38,8 +38,8 @@ def update_user_status(user_id: uuid.UUID, is_active: bool = Query(...), session
 
 @router.get("/urls", response_model=SuccessResponse[Any], status_code=200, responses=ADMIN_RESPONSES)
 def get_all_urls(page: int = 1, limit: int = 10, session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
-    data = admin_service.get_urls(session, page, limit)
-    return SuccessResponse(message="URLs retrieved", data=data)
+    result = admin_service.get_urls(session, page, limit)
+    return SuccessResponse(message="URLs retrieved", data=result["data"], meta=result["meta"])
 
 @router.delete("/urls/{url_id}", status_code=204, responses=ADMIN_RESPONSES)
 def delete_url_by_admin(url_id: uuid.UUID, session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
@@ -49,8 +49,8 @@ def delete_url_by_admin(url_id: uuid.UUID, session: Session = Depends(get_sessio
 
 @router.get("/qr-codes", response_model=SuccessResponse[Any], status_code=200, responses=ADMIN_RESPONSES)
 def get_all_qr_codes(page: int = 1, limit: int = 10, session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):
-    data = admin_service.get_qr_codes(session, page, limit)
-    return SuccessResponse(message="QR Codes retrieved", data=data)
+    result = admin_service.get_qr_codes(session, page, limit)
+    return SuccessResponse(message="QR Codes retrieved", data=result["data"], meta=result["meta"])
 
 @router.delete("/qr-codes/{qr_id}", status_code=204, responses=ADMIN_RESPONSES)
 def delete_qr_by_admin(qr_id: uuid.UUID, session: Session = Depends(get_session), admin_user: User = Depends(require_admin)):

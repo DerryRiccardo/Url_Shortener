@@ -78,6 +78,25 @@ Server akan berjalan di `http://127.0.0.1:8000`. Flag `--reload` akan otomatis m
 
 ---
 
+## 🧪 Testing (Pytest)
+
+Aplikasi ini menggunakan `pytest` dan `httpx` untuk *automated testing*. Pastikan *virtual environment* kamu dalam keadaan aktif.
+```bash
+.\venv\Scripts\activate
+```
+
+### 1. Menjalankan Seluruh Test
+```bash
+pytest -v
+```
+
+### 2. Menjalankan File Test Tertentu
+```bash
+pytest tests/test_auth.py -v
+pytest tests/test_url.py -v
+```
+---
+
 ## 📖 Dokumentasi API (Swagger UI)
 
 Kehebatan FastAPI adalah dokumentasi API yang *auto-generated*. Kamu bisa langsung mencoba dan melakukan *testing endpoint* (termasuk Login dan CRUD) langsung dari browser.

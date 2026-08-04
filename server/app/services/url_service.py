@@ -60,13 +60,13 @@ def create_short_url(session: Session, url_data: UrlCreate, owner_id: uuid.UUID)
 
 def get_url_by_id(session: Session, url_id: uuid.UUID, user_id: uuid.UUID):
     url = url_repository.get_url_by_id(session, url_id)
-    if not url or url.owner_id != user_id:
+    if not url or url.owner_id != user_id or url.deleted_at is not None:
         raise AppException(status_code=404, message="URL not found", code="URL_NOT_FOUND")
     return format_url_public(url)
 
 def update_url(session: Session, url_id: uuid.UUID, url_data: UrlUpdate, user_id: uuid.UUID):
     url = url_repository.get_url_by_id(session, url_id)
-    if not url or url.owner_id != user_id:
+    if not url or url.owner_id != user_id or url.deleted_at is not None:
         raise AppException(status_code=404, message="URL not found", code="URL_NOT_FOUND")
         
     if url_data.alias and url_data.alias != url.alias:
@@ -104,7 +104,7 @@ def get_urls(session: Session, user_id: uuid.UUID, page: int = 1, limit: int = 1
 
 def delete_url(session: Session, url_id: uuid.UUID, user_id: uuid.UUID):
     url = url_repository.get_url_by_id(session, url_id)
-    if not url or url.owner_id != user_id:
+    if not url or url.owner_id != user_id or url.deleted_at is not None:
         raise AppException(status_code=404, message="URL not found", code="URL_NOT_FOUND")
         
     # Soft delete

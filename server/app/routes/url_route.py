@@ -22,7 +22,7 @@ URL_RESPONSES = {
 def create_url(url_data: UrlCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     app_logger.info(f"User {current_user.id} attempting to create short URL")
     data = url_service.create_short_url(session, url_data, current_user.id)
-    app_logger.success(f"Short URL created: {data.alias}")
+    app_logger.success(f"Short URL created: {data['alias']}")
     return SuccessResponse(message="Short URL created successfully", data=data)
 
 @router.get("", response_model=SuccessResponse[list[UrlPublic]], status_code=200, responses=URL_RESPONSES)

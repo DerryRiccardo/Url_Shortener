@@ -33,7 +33,7 @@ def create_qr_code(session: Session, qr_data: QrCodeCreate, owner_id: uuid.UUID)
     # If url_id is provided, validate ownership and extract target
     if qr_data.url_id:
         url = url_repository.get_url_by_id(session, qr_data.url_id)
-        if not url or url.owner_id != owner_id:
+        if not url or url.owner_id != owner_id or url.deleted_at is not None:
             raise AppException(status_code=404, message="Short URL not found", code="URL_NOT_FOUND")
             
         target_url = f"{BASE_URL}/{url.alias}"

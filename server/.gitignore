@@ -19,6 +19,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .vscode
+.pytest_cache
 
 # Logs
 logs/
