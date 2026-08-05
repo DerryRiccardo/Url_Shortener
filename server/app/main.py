@@ -18,7 +18,10 @@ async def lifespan(app: FastAPI):
     yield 
     app_logger.info("Shutting down server...")
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    swagger_ui_parameters={"displayRequestDuration": True}
+)
 
 # Middleware untuk menambahkan Request ID ke setiap request
 @app.middleware("http")

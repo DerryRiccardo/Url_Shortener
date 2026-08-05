@@ -7,7 +7,7 @@ from app.utils.response import ErrorResponse
 
 router = APIRouter()
 
-@router.get("/{alias}", responses={
+@router.get("/{alias:path}", responses={
     404: {"model": ErrorResponse, "description": "URL Not Found or Inactive"},
     422: {"model": ErrorResponse, "description": "Validation Error"}
 })
