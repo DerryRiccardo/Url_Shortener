@@ -95,7 +95,24 @@ pytest -v
 pytest tests/test_auth.py -v
 pytest tests/test_url.py -v
 ```
+
 ---
+
+## 🚀 Load Testing (k6)
+
+Untuk menguji performa dan beban server, proyek ini menggunakan **k6** (dari Grafana). k6 adalah aplikasi mandiri (ditulis dalam bahasa Go) dan *script*-nya menggunakan JavaScript.
+
+### Cara Menjalankan Load Test
+1. Pastikan kamu sudah mengunduh dan menginstal `k6` di komputermu (atau memiliki *binary* `k6.exe`).
+2. Masukkan *script* k6 (misal `k6_test.js`) ke dalam folder `load_tests/`.
+3. Jalankan melalui terminal dengan perintah bawaan k6 (bukan melalui Python):
+```bash
+k6 run load_tests/nama_script.js
+k6 run load_tests/k6_test.js
+
+```
+---
+
 
 ## 📖 Dokumentasi API (Swagger UI)
 
