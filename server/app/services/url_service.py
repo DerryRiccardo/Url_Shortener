@@ -7,6 +7,8 @@ from datetime import datetime
 from app.models import Url, UrlCreate, UrlUpdate
 from app.repositories import url_repository
 from app.utils.response import AppException
+import json
+from app.redis_client import get_redis_client
 
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
@@ -69,6 +71,7 @@ def update_url(session: Session, url_id: uuid.UUID, url_data: UrlUpdate, user_id
     if not url or url.owner_id != user_id or url.deleted_at is not None:
         raise AppException(status_code=404, message="URL not found", code="URL_NOT_FOUND")
         
+    old_alias = url.alias
     if url_data.alias and url_data.alias != url.alias:
         existing = url_repository.get_url_by_alias(session, url_data.alias)
         if existing:
@@ -83,6 +86,12 @@ def update_url(session: Session, url_id: uuid.UUID, url_data: UrlUpdate, user_id
         
     url.updated_at = datetime.now()
     saved_url = url_repository.update_url(session, url)
+    
+    # Invalidate cache
+    redis_client = get_redis_client()
+    if redis_client:
+        redis_client.delete(f"url_cache:{old_alias}")
+            
     return format_url_public(saved_url)
 
 def get_urls(session: Session, user_id: uuid.UUID, page: int = 1, limit: int = 10):
@@ -111,9 +120,26 @@ def delete_url(session: Session, url_id: uuid.UUID, user_id: uuid.UUID):
     url.deleted_at = datetime.now()
     url.is_active = False
     url_repository.update_url(session, url)
-    return None
+    
+    # Invalidate cache
+    redis_client = get_redis_client()
+    if redis_client:
+        redis_client.delete(f"url_cache:{url.alias}")
+        
+    return True
 
 def resolve_alias_for_redirect(session: Session, alias: str):
+    redis_client = get_redis_client()
+    cache_key = f"url_cache:{alias}"
+    
+    # Cek data dalam Redis terlebih dahulu
+    if redis_client:
+        cached_data = redis_client.get(cache_key)
+        if cached_data:
+            data = json.loads(cached_data)
+            return Url(id=uuid.UUID(data["id"]), long_url=data["long_url"])
+
+    # Ambil dari database jika tidak ada di cache
     url = url_repository.get_url_by_alias(session, alias)
     if not url:
         raise AppException(status_code=404, message="URL not found", code="URL_NOT_FOUND")
@@ -123,5 +149,10 @@ def resolve_alias_for_redirect(session: Session, alias: str):
         
     if url.expires_at and url.expires_at < datetime.now(url.expires_at.tzinfo):
         raise AppException(status_code=404, message="URL has expired", code="URL_EXPIRED")
+        
+    # Simpan data ke cache agar pencarian selanjutnya lebih cepat
+    if redis_client:
+        cache_data = json.dumps({"id": str(url.id), "long_url": url.long_url})
+        redis_client.setex(cache_key, 86400, cache_data) # Cache selama 24 jam
         
     return url

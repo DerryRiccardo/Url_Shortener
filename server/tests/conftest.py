@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, Session, create_engine
 from app.main import app
 from app.database import get_session
+import fakeredis
 from app.models import User, UserCreate, Role
 from app.services import auth_service
 from sqlalchemy.pool import StaticPool
@@ -49,6 +50,13 @@ def normal_user_fixture(session: Session):
     user_data = UserCreate(name="Budi Test", email="budi@test.com", password="password123")
     user = auth_service.register_new_user(session, user_data)
     return user
+
+@pytest.fixture(autouse=True)
+def mock_redis(mocker):
+    # Gunakan fakeredis agar tes tidak membutuhkan server Redis betulan
+    fake_redis = fakeredis.FakeRedis(decode_responses=True)
+    mocker.patch("app.services.url_service.get_redis_client", return_value=fake_redis)
+    yield fake_redis
 
 @pytest.fixture(name="auth_headers")
 def auth_headers_fixture(normal_user: User):

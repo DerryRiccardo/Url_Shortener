@@ -10,3 +10,5 @@ user-agents
 loguru
 pytest
 httpx
+redis
+fakeredis
